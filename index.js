@@ -1,11 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./models');
+const gameRoutes = require('./routes/gameRoutes'); 
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(express.static(`${__dirname}/static`));
+
+
+app.use('/api/games', gameRoutes);
 
 app.get('/api/games', (req, res) => db.Game.findAll()
   .then(games => res.send(games))
@@ -53,7 +57,7 @@ app.put('/api/games/:id', (req, res) => {
 
 
 app.listen(3000, () => {
-  console.log('Server is up on port 3000');
+  console.log('Server is up on http://localhost:3000');
 });
 
 module.exports = app;
