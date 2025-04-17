@@ -131,3 +131,43 @@ describe('GET /api/games', function () {
     });
 });
 
+/**
+ * Testing populate endpoint
+ */
+describe('GET /api/games/populate', function () {
+    it('respond with 200 and inserts games into the database', function (done) {
+        request(app)
+            .get('/api/games/populate')
+            .set('Accept', 'application/json')
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                assert.ok(res.body.message.includes('Games populated successfully'));
+                assert.ok(res.body.count > 0);
+                done();
+            });
+    });
+});
+
+
+/**
+ * Testing search endpoint
+ */
+describe('POST /api/games/search', function () {
+    it('should return at least one game that matches the search', function (done) {
+        request(app)
+            .post('/api/games/search')
+            .send({ name: 'League', platform: '' }) // Match partial name
+            .set('Accept', 'application/json')
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                assert.ok(Array.isArray(res.body));
+                assert.ok(res.body.length > 0);
+                assert.ok(res.body.some(game => game.name.includes('League')));
+                done();
+            });
+    });
+});

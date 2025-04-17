@@ -7,7 +7,6 @@ We value your time, and you should too.  If you reach the 2 hour mark, save your
 
 The theory portions of this test are more open-ended.  It is up to you how much time you spend addressing these questions.  We recommend spending less than 1 hour.  
 
-
 For the record, we are not testing to see how much free time you have, so there will be no extra credit for monumental time investments.  We are looking for concise, clear answers that demonstrate domain expertise.
 
 # Project Overview
@@ -66,5 +65,92 @@ Please elaborate an action plan.
 #### Question 2:
 Let's pretend our data team is now delivering new files every day into the S3 bucket, and our service needs to ingest those files
 every day through the populate API. Could you describe a suitable solution to automate this? Feel free to propose architectural changes.
+
+
+# 📦 Production Readiness & Daily Ingestion Strategy
+
+## ✅ Question 1: What is missing to make the project production-ready?
+
+### 🔍 Observations
+While the current game database application works well in a development context, transitioning to production requires robustness, security, scalability, and maintainability.
+
+### 🛠️ Action Plan
+
+#### 1. **Environment & Configuration Management**
+- Introduce `.env` files and a config management strategy using libraries like `dotenv`.
+- Separate environments (dev/staging/prod) with proper config isolation.
+
+#### 2. **Validation & Error Handling**
+- Switch to from JS to TS.
+- Use a library like `Joi` for request validation, `Zod` for form validation (UI).
+- Centralize error handling (Express error middleware).
+
+#### 3. **Rate Limiting & Security**
+- Apply rate limiting using `express-rate-limit`.
+- Implement security best practices (helmet, CORS config, input sanitization).
+
+#### 4. **Authentication & Authorization**
+- Protect endpoints using JWT or OAuth (especially for sensitive operations like populate/delete).
+
+#### 5. **Database Improvements**
+- Use UUIDs as primary keys.
+- Enforce uniqueness at the DB level with proper constraints.
+- Improve indexing for performance (e.g. on `storeId`, `name`, `platform`).
+
+#### 6. **Testing & CI/CD**
+- Improve test coverage with unit and integration tests.
+- Set up CI pipelines (e.g. GitHub Actions) for lint/test/build.
+- Add pre-commit hooks using `husky`.
+
+#### 7. **Observability**
+- Use `winston` or `pino` for structured logging.
+- Add monitoring/alerting with services like Datadog/CloudWatch.
+
+#### 8. **Deployment Strategy**
+- Dockerize the app.
+- Use orchestration (e.g. Kubernetes or ECS).
+- CI/CD for zero-downtime deployment.
+
+---
+
+## 🔁 Question 2: Automating Daily Ingestion from S3
+
+### 🔄 Problem
+The API should ingest new files uploaded daily to an S3 bucket — manually triggering the populate endpoint is not scalable.
+
+### 🔧 Proposed Architecture
+
+#### ✅ Based on Experience
+> “According to what I’ve already tested, this approach would totally work — especially if we integrate CloudWatch for logging and alerts.”
+
+### 📐 Architecture Overview
+
+#### 1. **S3 Trigger**
+- Create a specific folder (e.g. `/daily-upload`) in the S3 bucket.
+- Set up an **S3 event trigger** for file uploads in this folder.
+
+#### 2. **Trigger Lambda**
+- A **Lambda function** is invoked when a file is added.
+- It pushes a message into an **SQS Queue** with file metadata (URL, timestamp, etc.).
+
+#### 3. **Ingestion Lambda**
+- Another **Lambda** function polls the queue.
+- It:
+  - Fetches the S3 file (JSON).
+  - Parses and deduplicates data.
+  - Calls the internal `/populate` API or directly interacts with the DB.
+
+#### 4. **Scaling & Monitoring**
+- SQS ensures load is managed — avoiding API overload.
+- CloudWatch logs errors, tracks ingestion stats, and sends alerts on failure.
+
+#### 5. **Optional Enhancements**
+- Use AWS Step Functions for more control (e.g. retry logic).
+- Add batch processing (combine games from multiple files before storing).
+
+### 🧩 Benefits
+- Fully **automated**, scalable, and resilient.
+- Easy to monitor and maintain.
+- Decouples upload logic from ingestion logic.
 
 
